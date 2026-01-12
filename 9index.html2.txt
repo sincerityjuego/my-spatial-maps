@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Spatial Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        #map { height: 100vh; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Socket.IO Client -->
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const map = L.map('map').setView([0, 0], 2);
+
+// Load OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20,
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// For moving object markers
+const movingMarkers = {};
+
+// Connect to backend socket
+const socket = io();
+
+// Listen for real-time location updates
+socket.on('updateLocation', (data) => {
+    const { id, lat, lng } = data;
+
+    if (movingMarkers[id]) {
+        movingMarkers[id].setLatLng([lat, lng]);
+    } else {
+        const icon = L.icon({
+            iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+        movingMarkers[id] = L.marker([lat, lng], { icon }).addTo(map);
+    }
+});
+
+</script>
+
+</body>
+</html>
